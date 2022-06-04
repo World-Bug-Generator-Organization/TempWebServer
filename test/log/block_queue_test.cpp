@@ -7,6 +7,16 @@
 
 namespace tempserver {
 
+TEST(BlockQueue, Push) {
+    BlockQueue<std::string> queue;
+    queue.Push("test queue");
+    std::string str;
+    queue.Pop(str);
+    std::cout << str << std::endl;
+
+    // std::cout << "test" << std::endl;
+}
+
 TEST(BlockQueue, Pop) {
     BlockQueue<std::string> queue;
     queue.Push("test queue");
