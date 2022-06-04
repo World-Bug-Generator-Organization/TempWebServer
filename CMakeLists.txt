@@ -23,18 +23,28 @@ enable_testing()
 
 # 添加子目录和头文件
 include_directories("src")
-aux_source_directory("src/log" LOG_SRC)
-
-add_executable(
-  block_queue_test
-  test/log/block_queue_test.cpp
-  ${LOG_SRC}
-)
-
-target_link_libraries(
-  block_queue_test
-  gtest_main
-)
+file(GLOB TEMP_WEB_SERVER_SRC "src/*/*.cpp")
 
 include(GoogleTest)
-gtest_discover_tests(block_queue_test)
+
+file(GLOB TEST_FILE "test/*/*.cpp")
+# 遍历所有测试文件夹
+foreach(test_file ${TEST_FILE})
+  # 获取无后缀文件名作为编译目标
+  get_filename_component(target ${test_file} NAME_WE)
+
+  # 编译测试文件
+  add_executable(
+    ${target}
+    ${test_file}
+    ${TEMP_WEB_SERVER_SRC}
+  )
+
+  # 链接测试文件
+  target_link_libraries(
+    ${target}
+    gtest_main
+  )
+
+  gtest_discover_tests(${target})
+endforeach(test_file)

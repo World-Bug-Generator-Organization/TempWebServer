@@ -1,6 +1,4 @@
-#ifndef LOCKER_H
-#define LOCKER_H
-
+#pragma once
 #include <pthread.h>
 #include <semaphore.h>
 
@@ -86,4 +84,3 @@ class Cond {
 };
 
 }  // namespace tempserver
-#endif
