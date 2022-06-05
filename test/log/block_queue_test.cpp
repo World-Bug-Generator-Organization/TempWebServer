@@ -1,15 +1,30 @@
-#include <string>
-#include <istream>
 #include "log/block_queue.h"
-#include "gtest/gtest.h"
+
+#include <gtest/gtest.h>
+
+#include <istream>
+#include <string>
 
 namespace tempserver {
-Test(BlockQueueTest, SimpleTest) {
-  BlockQueue<std::string> queue;
-  queue.Push("test queue");
-  std::string str;
-  queue.Pop(str);
-  std::cout << str << std::endl;
+
+TEST(BlockQueue, Push) {
+    BlockQueue<std::string> queue;
+    queue.Push("test queue");
+    std::string str;
+    queue.Pop(str);
+    std::cout << str << std::endl;
+
+    // std::cout << "test" << std::endl;
+}
+
+TEST(BlockQueue, Pop) {
+    BlockQueue<std::string> queue;
+    queue.Push("test queue");
+    std::string str;
+    queue.Pop(str);
+    std::cout << str << std::endl;
+
+    // std::cout << "test" << std::endl;
 }
 
 }  // namespace tempserver
