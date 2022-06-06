@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <thread>
+#include <iostream>
 
 #include "log/block_queue.h"
 
@@ -26,14 +27,14 @@ class Log {
   std::string cur_date_;
   std::ofstream log_file_;
   std::thread write_thread_;
+  bool thread_live_;
   BlockQueue<std::string> queue_;
 };
 
 // 模板成员函数在头文件中定义
 template <class... T>
 void Log::write(Level level, const char* format, T&... args) {
-  static std::map<Level, std::string> prefix{
-      {Level::kDebug, "[Debug]:"}, {Level::kInfo, "[Info]:"}, {Level::kWarn, "[Warn]:"}, {Level::kError, "[Error]:"}};
+  static std::map<Level, std::string> prefix{{Level::kDebug, "[Debug]: "}, {Level::kInfo, "[Info]: "}, {Level::kWarn, "[Warn]: "}, {Level::kError, "[Error]: "}};
   static char info_buffer_[kMaxInfoLen];
   int len = snprintf(info_buffer_, kMaxInfoLen, format, args...);
   std::string info(info_buffer_, info_buffer_ + len);
@@ -43,8 +44,7 @@ void Log::write(Level level, const char* format, T&... args) {
 // 内联函数在头文件定义
 template <class... T>
 void inline LOG_DEBUG(const char* format, T&... args) {
-  // Log::GetInstance()->write(Level::kDebug, format, args...);
-  Log::GetInstance();
+  Log::GetInstance()->write(Level::kDebug, format, args...);
 }
 template <class... T>
 void inline LOG_INFO(const char* format, T&... args) {

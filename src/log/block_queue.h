@@ -12,7 +12,7 @@ class BlockQueue {
   bool Push(const T &item);
   bool Pop(T &item);
   bool Pop(T &item, int ms_timeout);
-
+  void Close();
  private:
   bool IsFull();
   bool IsEmpty();
@@ -22,5 +22,6 @@ class BlockQueue {
   std::condition_variable consumer_;
   std::queue<T> queue_;
   size_t capacity_;
+  bool is_close_;
 };
 }  // namespace tempserver

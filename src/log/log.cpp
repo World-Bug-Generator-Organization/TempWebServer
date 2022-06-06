@@ -1,6 +1,7 @@
 #include <chrono>
 #include <iomanip>
 #include <map>
+#include <unistd.h>
 #include "log/log.h"
 
 namespace tempserver {
@@ -19,10 +20,10 @@ bool Log::UpdateFileHandle() {
   if (log_file_.is_open()) {
     if (cur_date_ != date) {
       log_file_.close();
-      log_file_.open(date + ".log");
+      log_file_.open(date + ".log", std::ios::out | std::ios::app);
     }
   } else {
-    log_file_.open(date + ".log");
+    log_file_.open(date + ".log", std::ios::out | std::ios::app);
   }
 
   cur_date_ = date;
@@ -32,8 +33,9 @@ bool Log::UpdateFileHandle() {
   return true;
 }
 Log::Log(size_t queue_cap) : queue_(queue_cap) {
+  thread_live_ = true;
   auto task = [&] {
-    while (true) {
+    while (thread_live_) {
       UpdateFileHandle();
       std::string info;
       queue_.Pop(info);
@@ -41,10 +43,14 @@ Log::Log(size_t queue_cap) : queue_(queue_cap) {
     }
   };
   write_thread_ = std::thread(task);
-  write_thread_.detach();
 }
 
-Log::~Log() { write_thread_.~thread(); }
+Log::~Log() {
+  sleep(1);  // 等待日志写入完成
+  thread_live_ = false;
+  queue_.Close();
+  write_thread_.join();
+}
 
 Log* Log::GetInstance() {
   static Log log;
