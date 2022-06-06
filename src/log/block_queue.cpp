@@ -19,9 +19,10 @@ template <typename T>
 bool BlockQueue<T>::Push(const T &item) {
   std::unique_lock<std::mutex> lock(latch_);
   while (IsFull()) {
-    cv_.wait(lock);
+    producer_.wait(lock);
   }
   queue_.emplace(item);
+  consumer_.notify_one();
   return true;
 }
 
@@ -29,9 +30,11 @@ template <typename T>
 bool BlockQueue<T>::Pop(T &item) {
   std::unique_lock<std::mutex> lock(latch_);
   while (IsEmpty()) {
-    cv_.wait(lock);
+    consumer_.wait(lock);
   }
-  queue_.emplace(item);
+  item = queue_.front();
+  queue_.pop();
+  producer_.notify_one();
   return true;
 }
 
@@ -39,12 +42,14 @@ template <typename T>
 bool BlockQueue<T>::Pop(T &item, int ms_timeout) {
   std::unique_lock<std::mutex> lock(latch_);
   while (IsEmpty()) {
-    auto status = cv_.wait_for(lock, std::chrono::seconds(ms_timeout));
+    auto status = consumer_.wait_for(lock, std::chrono::seconds(ms_timeout));
     if (status == std::cv_status::timeout) {
       return false;
     }
   }
-  queue_.emplace(item);
+  item = queue_.front();
+  queue_.pop();
+  producer_.notify_one();
   return true;
 }
 /*

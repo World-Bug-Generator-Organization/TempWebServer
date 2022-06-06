@@ -12,14 +12,14 @@ class BlockQueue {
   bool Push(const T &item);
   bool Pop(T &item);
   bool Pop(T &item, int ms_timeout);
-  void Clear();
 
  private:
   bool IsFull();
   bool IsEmpty();
 
   std::mutex latch_;
-  std::condition_variable cv_;
+  std::condition_variable producer_;
+  std::condition_variable consumer_;
   std::queue<T> queue_;
   size_t capacity_;
 };
