@@ -17,7 +17,7 @@ bool BlockQueue<T>::IsEmpty() {
 }
 
 template <typename T>
-bool BlockQueue<T>::Push(const T &item) {
+bool BlockQueue<T>::Push(const T &item) {  // 加入消息
   std::unique_lock<std::mutex> lock(latch_);
   while (IsFull()) {
     producer_.wait(lock);
@@ -31,7 +31,7 @@ bool BlockQueue<T>::Push(const T &item) {
 }
 
 template <typename T>
-bool BlockQueue<T>::Pop(T &item) {
+bool BlockQueue<T>::Pop(T &item) {  // 取出消息
   std::unique_lock<std::mutex> lock(latch_);
   while (IsEmpty()) {
     consumer_.wait(lock);
@@ -46,14 +46,11 @@ bool BlockQueue<T>::Pop(T &item) {
 }
 
 template <typename T>
-bool BlockQueue<T>::Pop(T &item, int ms_timeout) {
+bool BlockQueue<T>::Pop(T &item, size_t ms_timeout) {  // 取出消息
   std::unique_lock<std::mutex> lock(latch_);
   while (IsEmpty()) {
     auto status = consumer_.wait_for(lock, std::chrono::seconds(ms_timeout));
-    if (status == std::cv_status::timeout) {
-      return false;
-    }
-    if (is_close_) {
+    if (status == std::cv_status::timeout || is_close_) {
       return false;
     }
   }
@@ -64,7 +61,7 @@ bool BlockQueue<T>::Pop(T &item, int ms_timeout) {
 }
 
 template <typename T>
-void BlockQueue<T>::Close() {
+void BlockQueue<T>::Close() {  // 唤醒等待线程
   is_close_ = true;
   producer_.notify_all();
   consumer_.notify_all();

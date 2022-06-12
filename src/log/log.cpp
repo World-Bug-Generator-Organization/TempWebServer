@@ -48,8 +48,8 @@ Log::Log(size_t queue_cap) : queue_(queue_cap) {
 Log::~Log() {
   sleep(1);  // 等待日志写入完成
   thread_live_ = false;
-  queue_.Close();
-  write_thread_.join();
+  queue_.Close();        // 关闭阻塞队列
+  write_thread_.join();  // 等待写入线程结束
 }
 
 Log* Log::GetInstance() {

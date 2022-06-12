@@ -16,27 +16,30 @@ class Log {
   static Log* GetInstance();
 
   template <class... T>
-  void write(Level level, const char* format, T&... args);
+  void write(Level level, const char* format, T&... args);  // 向日志中写入消息
 
  private:
   Log(size_t queue_cap = 1000);
   ~Log();
-  std::string GetDate();
-  bool UpdateFileHandle();
+  std::string GetDate();    // 获取当前日期
+  bool UpdateFileHandle();  // 更新写入文件句柄
 
-  std::string cur_date_;
-  std::ofstream log_file_;
-  std::thread write_thread_;
-  bool thread_live_;
-  BlockQueue<std::string> queue_;
+  std::string cur_date_;           // 当前日期
+  std::ofstream log_file_;         // 文件句柄
+  std::thread write_thread_;       // 写入线程
+  bool thread_live_;               // 控制线程生命周期
+  BlockQueue<std::string> queue_;  // 阻塞队列
 };
 
 // 模板成员函数在头文件中定义
 template <class... T>
 void Log::write(Level level, const char* format, T&... args) {
-  static std::map<Level, std::string> prefix{{Level::kDebug, "[Debug]: "}, {Level::kInfo, "[Info]: "}, {Level::kWarn, "[Warn]: "}, {Level::kError, "[Error]: "}};
-  static char info_buffer_[kMaxInfoLen];
-  int len = snprintf(info_buffer_, kMaxInfoLen, format, args...);
+  static std::map<Level, std::string> prefix{{Level::kDebug, "[Debug]: "},
+                                             {Level::kInfo, "[Info]: "},
+                                             {Level::kWarn, "[Warn]: "},
+                                             {Level::kError, "[Error]: "}};
+  char info_buffer_[kMaxInfoLen];
+  int len = snprintf(info_buffer_, kMaxInfoLen, format, args...);  // 将格式化字符串转换为字符数组
   std::string info(info_buffer_, info_buffer_ + len);
   queue_.Push(prefix[level] + info);
 }
