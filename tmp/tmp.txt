@@ -1,0 +1,21 @@
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lmysqlclient -pthread ")    # 设置编译选项
+MESSAGE( STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")              # 打印编译选项
+
+#设置要寻找的链接库的名字，这里应该是找libmysqlclient.so
+SET(MYSQL_NAMES mysqlclient mysqlclient_r)
+#将libmysqlclient.so的路径放到MYSQL_LIBRARY
+FIND_LIBRARY(MYSQL_LIBRARY
+  NAMES ${MYSQL_NAMES}
+  PATHS /usr/lib /usr/local/lib
+  PATH_SUFFIXES mysql
+)
+#如果上面找到mysql的库文件，就将MYSQL_FOUND设为真
+IF (MYSQL_LIBRARY)
+  SET(MYSQL_FOUND TRUE)
+  SET( MYSQL_LIBRARIES ${MYSQL_LIBRARY} )
+  MESSAGE(STATUS "Found MySQL: ${MYSQL_LIBRARY}")
+ELSE (MYSQL_LIBRARY)
+  SET(MYSQL_FOUND FALSE)
+  SET( MYSQL_LIBRARIES )
+  MESSAGE(FATAL_ERROR "Could NOT find MySQL library")
+ENDIF (MYSQL_LIBRARY)

@@ -8,6 +8,10 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
+
+
+
+
 # GoogleTest基础设置
 enable_testing()
 include(FetchContent)
@@ -41,9 +45,11 @@ foreach(test_file ${TEST_FILE})
   )
 
   # 链接测试文件
+  # 链接mysqlclient
   target_link_libraries(
     ${target}
     gtest_main
+    mysqlclient
   )
 
   gtest_discover_tests(${target})
