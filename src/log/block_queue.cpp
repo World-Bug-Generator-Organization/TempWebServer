@@ -1,9 +1,10 @@
 #include <string>
+#include <iostream>
 #include "block_queue.h"
 namespace tempserver {
 
 template <typename T>
-BlockQueue<T>::BlockQueue(size_t cap) : capacity_(cap) {}
+BlockQueue<T>::BlockQueue(size_t cap) : capacity_(cap), is_close_(false) {}
 
 template <typename T>
 bool BlockQueue<T>::IsFull() {
@@ -16,36 +17,54 @@ bool BlockQueue<T>::IsEmpty() {
 }
 
 template <typename T>
-bool BlockQueue<T>::Push(const T &item) {
+bool BlockQueue<T>::Push(const T &item) {  // 加入消息
   std::unique_lock<std::mutex> lock(latch_);
   while (IsFull()) {
-    cv_.wait(lock);
-  }
-  queue_.emplace(item);
-  return true;
-}
-
-template <typename T>
-bool BlockQueue<T>::Pop(T &item) {
-  std::unique_lock<std::mutex> lock(latch_);
-  while (IsEmpty()) {
-    cv_.wait(lock);
-  }
-  queue_.emplace(item);
-  return true;
-}
-
-template <typename T>
-bool BlockQueue<T>::Pop(T &item, int ms_timeout) {
-  std::unique_lock<std::mutex> lock(latch_);
-  while (IsEmpty()) {
-    auto status = cv_.wait_for(lock, std::chrono::seconds(ms_timeout));
-    if (status == std::cv_status::timeout) {
+    producer_.wait(lock);
+    if (is_close_) {
       return false;
     }
   }
   queue_.emplace(item);
+  consumer_.notify_one();
   return true;
+}
+
+template <typename T>
+bool BlockQueue<T>::Pop(T &item) {  // 取出消息
+  std::unique_lock<std::mutex> lock(latch_);
+  while (IsEmpty()) {
+    consumer_.wait(lock);
+    if (is_close_) {
+      return false;
+    }
+  }
+  item = queue_.front();
+  queue_.pop();
+  producer_.notify_one();
+  return true;
+}
+
+template <typename T>
+bool BlockQueue<T>::Pop(T &item, size_t ms_timeout) {  // 取出消息
+  std::unique_lock<std::mutex> lock(latch_);
+  while (IsEmpty()) {
+    auto status = consumer_.wait_for(lock, std::chrono::seconds(ms_timeout));
+    if (status == std::cv_status::timeout || is_close_) {
+      return false;
+    }
+  }
+  item = queue_.front();
+  queue_.pop();
+  producer_.notify_one();
+  return true;
+}
+
+template <typename T>
+void BlockQueue<T>::Close() {  // 唤醒等待线程
+  is_close_ = true;
+  producer_.notify_all();
+  consumer_.notify_all();
 }
 /*
 模板类在.h中定义，在.cpp中实现:https://zhuanlan.zhihu.com/p/147623943
