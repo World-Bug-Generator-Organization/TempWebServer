@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 project(TempWebServer CXX)
 
 # GoogleTest 需要至少 C++11
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Debug")
